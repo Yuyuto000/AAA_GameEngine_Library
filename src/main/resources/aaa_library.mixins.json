@@ -2,11 +2,12 @@
   "required": true,
   "minVersion": "0.8",
   "package": "aaaminecraft.library.mixin",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_17",
   "refmap": "aaa_library.refmap.json",
   "mixins": [
   ],
   "client": [
+    "PlayerModelMixin"
   ],
   "injectors": {
     "defaultRequire": 1
