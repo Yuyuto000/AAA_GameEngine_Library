@@ -2,6 +2,7 @@ package aaaminecraft.library.core.animation.importer;
 
 import aaaminecraft.library.core.animation.bone.Bone;
 import aaaminecraft.library.core.animation.bone.BoneMapping;
+import aaaminecraft.library.core.animation.bone.Skeleton;
 
 public class PlayerAnimationImporter {
 
@@ -11,39 +12,67 @@ public class PlayerAnimationImporter {
         this.boneMapping = new BoneMapping();
     }
 
-    public Bone createPlayerSkeleton() {
+    public Skeleton createPlayerSkeleton() {
 
+        // Root
         Bone root = new Bone("root");
 
-        Bone body = new Bone("body");
+        // Upper Body
+        Bone pelvis = new Bone("pelvis");
+        Bone spine = new Bone("spine");
         Bone chest = new Bone("chest");
+        Bone neck = new Bone("neck");
         Bone head = new Bone("head");
 
-        Bone leftArm = new Bone("arm.L");
-        Bone leftHand = new Bone("hand.L");
+        // Left Arm
+        Bone shoulderL = new Bone("shoulder.L");
+        Bone upperArmL = new Bone("upper_arm.L");
+        Bone lowerArmL = new Bone("lower_arm.L");
 
-        Bone rightArm = new Bone("arm.R");
-        Bone rightHand = new Bone("hand.R");
+        // Right Arm
+        Bone shoulderR = new Bone("shoulder.R");
+        Bone upperArmR = new Bone("upper_arm.R");
+        Bone lowerArmR = new Bone("lower_arm.R");
 
-        Bone leftLeg = new Bone("leg.L");
-        Bone rightLeg = new Bone("leg.R");
+        // Left Leg
+        Bone thighL = new Bone("thigh.L");
+        Bone calfL = new Bone("calf.L");
 
-        root.addChild(body);
+        // Right Leg
+        Bone thighR = new Bone("thigh.R");
+        Bone calfR = new Bone("calf.R");
 
-        body.addChild(chest);
+        // Hierarchy
+        root.addChild(pelvis);
 
-        chest.addChild(head);
+        // Spine
+        pelvis.addChild(spine);
+        spine.addChild(chest);
 
-        chest.addChild(leftArm);
-        leftArm.addChild(leftHand);
+        // Head
+        chest.addChild(neck);
+        neck.addChild(head);
 
-        chest.addChild(rightArm);
-        rightArm.addChild(rightHand);
+        // Left Arm
+        chest.addChild(shoulderL);
+        shoulderL.addChild(upperArmL);
+        upperArmL.addChild(lowerArmL);
 
-        body.addChild(leftLeg);
-        body.addChild(rightLeg);
+        // Right Arm
+        chest.addChild(shoulderR);
+        shoulderR.addChild(upperArmR);
+        upperArmR.addChild(lowerArmR);
 
-        return root;
+        // Left Leg
+        pelvis.addChild(thighL);
+        thighL.addChild(calfL);
+
+        // Right Leg
+        pelvis.addChild(thighR);
+        thighR.addChild(calfR);
+
+        // Create Skeleton
+        return new Skeleton(root);
     }
 
     public BoneMapping getBoneMapping() {

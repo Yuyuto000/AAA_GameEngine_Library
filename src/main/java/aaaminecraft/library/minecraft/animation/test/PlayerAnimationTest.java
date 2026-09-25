@@ -5,6 +5,8 @@ import org.slf4j.Logger;
 
 import aaaminecraft.library.core.animation.bone.Bone;
 import aaaminecraft.library.core.animation.bone.BoneMapping;
+import aaaminecraft.library.core.animation.bone.Skeleton;
+import aaaminecraft.library.core.animation.importer.PlayerAnimationImporter;
 import aaaminecraft.library.minecraft.animation.bone.MinecraftBoneApplier;
 import aaaminecraft.library.minecraft.animation.bone.MinecraftPlayerBoneProvider;
 
@@ -46,10 +48,16 @@ public class PlayerAnimationTest {
         runTest(playerModel);
     }
 
-    private static void runTest(PlayerModel<?> playerModel) {
+    private static void runTest(
+            PlayerModel<?> playerModel
+    ) {
 
         // ① AAA側のPlayer Skeletonを作る
-        Bone skeleton = createSkeleton();
+        PlayerAnimationImporter importer =
+                new PlayerAnimationImporter();
+
+        Skeleton skeleton =
+                importer.createPlayerSkeleton();
 
         LOGGER.info(
                 "[AAA Animation Test] Player skeleton created."
@@ -60,15 +68,17 @@ public class PlayerAnimationTest {
                 new MinecraftPlayerBoneProvider(playerModel);
 
         BoneMapping mapping =
-                provider.createMapping(skeleton);
+                provider.createMapping(
+                        skeleton.getRoot()
+                );
 
         LOGGER.info(
                 "[AAA Animation Test] Bone mapping created."
         );
 
-        // ③ head Boneを取得
+        // ③ Skeletonからhead Boneを取得
         Bone head =
-                findBone(skeleton, "head");
+                skeleton.getBone("head");
 
         if (head == null) {
 
@@ -88,6 +98,7 @@ public class PlayerAnimationTest {
                 (float) Math.toRadians(45.0);
 
         head.getTransform().setRotation(
+                0.0f,
                 rotation,
                 0.0f,
                 0.0f
@@ -122,68 +133,5 @@ public class PlayerAnimationTest {
         LOGGER.info(
                 "[AAA Animation Test] Test completed successfully."
         );
-    }
-
-    private static Bone createSkeleton() {
-
-        Bone root =
-                new Bone("root");
-
-        Bone body =
-                new Bone("body");
-
-        Bone chest =
-                new Bone("chest");
-
-        Bone head =
-                new Bone("head");
-
-        Bone leftArm =
-                new Bone("arm.L");
-
-        Bone rightArm =
-                new Bone("arm.R");
-
-        Bone leftLeg =
-                new Bone("leg.L");
-
-        Bone rightLeg =
-                new Bone("leg.R");
-
-        root.addChild(body);
-
-        body.addChild(chest);
-
-        chest.addChild(head);
-
-        chest.addChild(leftArm);
-        chest.addChild(rightArm);
-
-        body.addChild(leftLeg);
-        body.addChild(rightLeg);
-
-        return root;
-    }
-
-    private static Bone findBone(
-            Bone bone,
-            String name
-    ) {
-
-        if (bone.getName().equals(name)) {
-            return bone;
-        }
-
-        for (Bone child : bone.getChildren()) {
-
-            Bone result =
-                    findBone(child, name);
-
-            if (result != null) {
-                return result;
-            }
-        }
-
-        return null;
     }
 }

@@ -1,72 +1,107 @@
 package aaaminecraft.library.core.animation.bone;
 
+import aaaminecraft.library.core.transform.Quaternion;
+import aaaminecraft.library.core.transform.Vector3;
+
 public class BoneTransformer {
 
-    private float x;
-    private float y;
-    private float z;
+    // =========================
+    // Local Transform
+    // =========================
 
-    private float rotX;
-    private float rotY;
-    private float rotZ;
+    private Vector3 position;
+    private Quaternion rotation;
+    private Vector3 scale;
 
-    private float scaleX = 1.0f;
-    private float scaleY = 1.0f;
-    private float scaleZ = 1.0f;
 
-    public BoneTransformer() {}
+    // =========================
+    // World Transform
+    // =========================
 
-    public float getX() {
-        return x;
+    private Vector3 worldPosition;
+    private Quaternion worldRotation;
+    private Vector3 worldScale;
+
+
+    public BoneTransformer() {
+
+        position = new Vector3();
+        rotation = new Quaternion();
+        scale = new Vector3(1.0f, 1.0f, 1.0f);
+
+        worldPosition = new Vector3();
+        worldRotation = new Quaternion();
+        worldScale = new Vector3(1.0f, 1.0f, 1.0f);
     }
 
-    public float getY() {
-        return y;
+
+    // =========================
+    // Local Position
+    // =========================
+
+    public Vector3 getPosition() {
+        return position;
     }
 
-    public float getZ() {
-        return z;
+
+    // =========================
+    // Local Rotation
+    // =========================
+
+    public Quaternion getRotation() {
+        return rotation;
     }
 
-    public float getRotX() {
-        return rotX;
+
+    // =========================
+    // Local Scale
+    // =========================
+
+    public Vector3 getScale() {
+        return scale;
     }
 
-    public float getRotY() {
-        return rotY;
+
+    // =========================
+    // World Position
+    // =========================
+
+    public Vector3 getWorldPosition() {
+        return worldPosition;
     }
 
-    public float getRotZ() {
-        return rotZ;
+
+    // =========================
+    // World Rotation
+    // =========================
+
+    public Quaternion getWorldRotation() {
+        return worldRotation;
     }
 
-    public float getScaleX() {
-        return scaleX;
+
+    // =========================
+    // World Scale
+    // =========================
+
+    public Vector3 getWorldScale() {
+        return worldScale;
     }
 
-    public float getScaleY() {
-        return scaleY;
+
+    // =========================
+    // Set Local Transform
+    // =========================
+
+    public void setPosition(float x, float y, float z) {
+        position.set(x, y, z);
     }
 
-    public float getScaleZ() {
-        return scaleZ;
+    public void setRotation(float x, float y, float z, float w) {
+        rotation.set(x, y, z, w);
     }
 
-    public void setPosition(float x, float y, float z){
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-
-    public void setRotation(float rotX, float rotY, float rotZ){
-        this.rotX = rotX;
-        this.rotY = rotY;
-        this.rotZ = rotZ;
-    }
-
-    public void setScale(float scaleX, float scaleY, float scaleZ){
-        this.scaleX = scaleX;
-        this.scaleY = scaleY;
-        this.scaleZ = scaleZ;
+    public void setScale(float x, float y, float z) {
+        scale.set(x, y, z);
     }
 }
