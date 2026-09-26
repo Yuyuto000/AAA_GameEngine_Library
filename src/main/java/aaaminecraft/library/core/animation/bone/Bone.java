@@ -37,4 +37,17 @@ public class Bone {
         children.add(child);
     }
 
+    public void updateWorldTransform() {
+
+        if (parent == null) {
+            transformer.updateWorldTransform();
+        } else {
+            transformer.updateWorldTransform(parent.getTransform());
+        }
+
+        for (Bone child : children) {
+            child.updateWorldTransform();
+        }
+    }
+
 }
