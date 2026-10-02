@@ -21,11 +21,7 @@ import aaaminecraft.library.minecraft.animation.bone.MinecraftBoneApplier;
 import aaaminecraft.library.minecraft.animation.bone.MinecraftPlayerBoneProvider;
 
 
-@Mod.EventBusSubscriber(
-        modid = "aaa_library",
-        bus = Mod.EventBusSubscriber.Bus.FORGE,
-        value = Dist.CLIENT
-)
+// @Mod.EventBusSubscriber(modid = "aaa_library", bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class PlayerAnimationTest {
 
     private static final Logger LOGGER =
@@ -64,15 +60,11 @@ public class PlayerAnimationTest {
         // ① AAA Skeletonを生成
         // ==================================================
 
-        PlayerAnimationImporter importer =
-                new PlayerAnimationImporter();
+        PlayerAnimationImporter importer = new PlayerAnimationImporter();
 
-        Skeleton skeleton =
-                importer.createPlayerSkeleton();
+        Skeleton skeleton = importer.createPlayerSkeleton();
 
-        LOGGER.info(
-                "[AAA Animation Test] Player skeleton created."
-        );
+        LOGGER.info("[AAA Animation Test] Player skeleton created.");
 
 
         // ==================================================
