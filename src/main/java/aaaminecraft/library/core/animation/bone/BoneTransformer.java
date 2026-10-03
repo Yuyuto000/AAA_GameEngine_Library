@@ -77,25 +77,83 @@ public class BoneTransformer {
     }
 
     // mixing transform
-    public void updateWorldTransform(BoneTransformer parent){
+    public void updateWorldTransform(BoneTransformer parent) {
 
-        // world scale
-        worldScale = parent.getWorldScale().multiply(scale);
+        Vector3 parentPosition = parent.getWorldPosition();
+        Quaternion parentRotation = parent.getWorldRotation();
+        Vector3 parentScale = parent.getWorldScale();
 
-        // world rotation
-        worldRotation = parent.getWorldRotation().multiply(rotation).normalize();
+        // ワールドスケール
+        worldScale = new Vector3(
+                parentScale.getX() * scale.getX(),
+                parentScale.getY() * scale.getY(),
+                parentScale.getZ() * scale.getZ()
+        );
 
-        //world position
-        Vector3 scaledPosition = position.multiply(parent.getWorldPosition());
-        Vector3 rotatedPosition = parent.getWorldRotation().rotate(scaledPosition);
-        worldPosition = parent.getWorldPosition().add(rotatedPosition);
+        // ワールド回転
+        Quaternion parentRotationCopy = new Quaternion(
+                parentRotation.getX(),
+                parentRotation.getY(),
+                parentRotation.getZ(),
+                parentRotation.getW()
+        );
+
+        Quaternion localRotationCopy = new Quaternion(
+                rotation.getX(),
+                rotation.getY(),
+                rotation.getZ(),
+                rotation.getW()
+        );
+
+        worldRotation = parentRotationCopy
+                .multiply(localRotationCopy)
+                .normalize();
+
+        // ローカル位置に親のワールドスケールを適用
+        Vector3 scaledPosition = new Vector3(
+                position.getX() * parentScale.getX(),
+                position.getY() * parentScale.getY(),
+                position.getZ() * parentScale.getZ()
+        );
+
+        // 親のワールド回転を適用
+        Quaternion rotationCopy = new Quaternion(
+                parentRotation.getX(),
+                parentRotation.getY(),
+                parentRotation.getZ(),
+                parentRotation.getW()
+        );
+
+        Vector3 rotatedPosition = rotationCopy.rotate(scaledPosition);
+
+        // 親の位置をコピーしてから加算
+        worldPosition = new Vector3(
+                parentPosition.getX() + rotatedPosition.getX(),
+                parentPosition.getY() + rotatedPosition.getY(),
+                parentPosition.getZ() + rotatedPosition.getZ()
+        );
     }
 
-    //root transform
     public void updateWorldTransform() {
 
-        worldPosition = position;
-        worldRotation = rotation;
-        worldScale = scale;
+        // Rootでもローカル変換とワールド変換を別オブジェクトにする
+        worldPosition = new Vector3(
+                position.getX(),
+                position.getY(),
+                position.getZ()
+        );
+
+        worldRotation = new Quaternion(
+                rotation.getX(),
+                rotation.getY(),
+                rotation.getZ(),
+                rotation.getW()
+        );
+
+        worldScale = new Vector3(
+                scale.getX(),
+                scale.getY(),
+                scale.getZ()
+        );
     }
 }

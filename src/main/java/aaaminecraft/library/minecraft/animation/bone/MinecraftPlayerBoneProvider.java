@@ -14,38 +14,40 @@ public class MinecraftPlayerBoneProvider {
         this.playerModel = playerModel;
     }
 
-    public ModelPart getPart(String name){
+    public ModelPart getPart(String name) {
 
         return switch (name) {
-            case "head" -> playerModel.head;
-            case "body" -> playerModel.body;
-            case "arm.L" -> playerModel.leftArm;
-            case "arm.R" -> playerModel.rightArm;
-            case "leg.L" -> playerModel.leftLeg;
-            case "leg.R" -> playerModel.rightLeg;
+
+            case "Head" -> playerModel.head;
+            case "Chest" -> playerModel.body;
+            case "UpperArm_L" -> playerModel.leftArm;
+            case "UpperArm_R" -> playerModel.rightArm;
+            case "Thigh_L" -> playerModel.leftLeg;
+            case "Thigh_R" -> playerModel.rightLeg;
             default -> null;
         };
     }
 
-    public BoneMapping createMapping(Bone skeleton){
+    public BoneMapping createMapping(Bone skeleton) {
 
         BoneMapping mapping = new BoneMapping();
         mapBone(mapping, skeleton);
+
         return mapping;
     }
 
-    private void mapBone(BoneMapping mapping, Bone bone){
+    private void mapBone(BoneMapping mapping, Bone bone) {
 
         ModelPart modelPart = getPart(bone.getName());
 
-        if (modelPart != null){
+        if (modelPart != null) {
             mapping.map(
                     bone,
                     new BoneMappingEntry(bone, modelPart)
             );
         }
 
-        for (Bone child : bone.getChildren()){
+        for (Bone child : bone.getChildren()) {
             mapBone(mapping, child);
         }
     }

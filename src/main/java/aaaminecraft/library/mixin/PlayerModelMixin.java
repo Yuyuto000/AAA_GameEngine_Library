@@ -1,7 +1,7 @@
 package aaaminecraft.library.mixin;
 
-import aaaminecraft.library.core.animation.bone.Bone;
 import aaaminecraft.library.core.animation.bone.BoneMapping;
+import aaaminecraft.library.core.animation.bone.BoneMappingEntry;
 import aaaminecraft.library.core.animation.bone.Skeleton;
 import aaaminecraft.library.core.animation.bone.SkeletonLoader;
 import aaaminecraft.library.minecraft.animation.bone.MinecraftBoneApplier;
@@ -65,10 +65,10 @@ public class PlayerModelMixin<T extends LivingEntity> {
             return;
         }
 
-        // 独自Skeletonのワールド変換を更新
+        // AAA側の階層からワールド変換を計算
         aaa$skeleton.getRoot().updateWorldTransform();
 
-        // 対応するボーンをMinecraftのModelPartへ適用
+        // Minecraft側の各パーツへワールド変換を適用
         aaa$applyBone("Chest");
         aaa$applyBone("Head");
         aaa$applyBone("UpperArm_R");
@@ -119,8 +119,18 @@ public class PlayerModelMixin<T extends LivingEntity> {
     @Unique
     private void aaa$applyBone(String boneName) {
 
-        if (aaa$mapping.contains(boneName)) {
-            aaa$applier.apply(aaa$mapping.get(boneName));
+        boolean exists = aaa$mapping.contains(boneName);
+        AAA$LOGGER.info("[AAA Animation] Mapping check: {} | contains={}", boneName, exists);
+        if (!exists) {
+            AAA$LOGGER.warn("[AAA Animation] Mapping missing for bone: {}", boneName);
+            return;
         }
+        BoneMappingEntry entry = aaa$mapping.get(boneName);
+        if (entry == null) {
+            AAA$LOGGER.error("[AAA Animation] Mapping entry is null: {}", boneName);
+            return;
+        }
+        AAA$LOGGER.info("[AAA Animation] Calling applier: {}", boneName);
+        aaa$applier.apply(entry);
     }
 }
