@@ -11,25 +11,69 @@ import org.slf4j.Logger;
 
 import aaaminecraft.library.core.animation.bone.Bone;
 import aaaminecraft.library.core.animation.bone.BoneMapping;
-import aaaminecraft.library.core.animation.bone.Skeleton;
 import aaaminecraft.library.core.animation.bone.PlayerSkeletonFactory;
+import aaaminecraft.library.core.animation.bone.Skeleton;
 import aaaminecraft.library.core.transform.Quaternion;
 
 import aaaminecraft.library.minecraft.animation.bone.MinecraftBoneApplier;
 import aaaminecraft.library.minecraft.animation.bone.MinecraftPlayerBoneProvider;
 
 
-// @Mod.EventBusSubscriber(modid = "aaa_library", bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+// @Mod.EventBusSubscriber(
+//         modid = "aaa_library",
+//         bus = Mod.EventBusSubscriber.Bus.FORGE,
+//         value = Dist.CLIENT
+// )
 public class PlayerAnimationTest {
 
     private static final Logger LOGGER =
             LogUtils.getLogger();
 
 
+    // ==================================================
+    // Test Configuration
+    // ==================================================
+
+    /**
+     * Chest rotation around Y axis.
+     *
+     * 胸部をY軸周りに回転させる角度。
+     */
+    private static final float CHEST_ROTATION_DEGREES = 45.0f;
+
+    /**
+     * Upper arm rotation around X axis.
+     *
+     * 左上腕をX軸周りに回転させる角度。
+     */
+    private static final float UPPER_ARM_ROTATION_DEGREES = 90.0f;
+
+
+    // ==================================================
+    // Test State
+    // ==================================================
+
+    private static boolean initialized = false;
+    private static boolean testCompleted = false;
+
+    private static Skeleton skeleton;
+    private static BoneMapping mapping;
+    private static MinecraftBoneApplier applier;
+
+
+    // ==================================================
+    // Render Event
+    // ==================================================
+
     @SubscribeEvent
     public static void onRenderPlayer(
             RenderPlayerEvent.Pre event
     ) {
+
+        // ----------------------------------------------
+        // Only test the local player.
+        // ローカルプレイヤーだけをテスト対象にする。
+        // ----------------------------------------------
 
         if (!(event.getEntity() instanceof LocalPlayer)) {
             return;
@@ -41,41 +85,147 @@ public class PlayerAnimationTest {
         PlayerModel<?> playerModel =
                 event.getRenderer().getModel();
 
-        LOGGER.info(
-                "[AAA Animation Test] Starting transform test for player: {}",
-                player.getName().getString()
-        );
 
-        runTest(playerModel);
+        // ----------------------------------------------
+        // Initialize once.
+        // 初回のみ初期化する。
+        // ----------------------------------------------
+
+        if (!initialized) {
+
+            if (!initialize(playerModel)) {
+                return;
+            }
+
+            initialized = true;
+
+            LOGGER.info(
+                    "[AAA Animation Test] Test system initialized for player: {}",
+                    player.getName().getString()
+            );
+        }
+
+
+        // ----------------------------------------------
+        // Update AAA skeleton.
+        // AAA SkeletonのWorld Transformを更新する。
+        // ----------------------------------------------
+
+        skeleton.getRoot().updateWorldTransform();
+
+
+        // ----------------------------------------------
+        // Run logical tests once.
+        // 論理テストは一度だけ実行する。
+        // ----------------------------------------------
+
+        if (!testCompleted) {
+
+            runSkeletonPropagationTest();
+
+            testCompleted = true;
+
+            LOGGER.info(
+                    "[AAA Animation Test] Skeleton propagation tests completed."
+            );
+        }
+
+
+        // ----------------------------------------------
+        // Apply test result to Minecraft.
+        // テスト結果をMinecraft側へ適用する。
+        // ----------------------------------------------
+
+        applyMinecraftTest(playerModel);
     }
 
 
-    private static void runTest(
+    // ==================================================
+    // Initialization
+    // ==================================================
+
+    private static boolean initialize(
             PlayerModel<?> playerModel
     ) {
 
+        LOGGER.info(
+                "[AAA Animation Test] Initializing test system..."
+        );
+
+
         // ==================================================
-        // ① AAA Skeletonを生成
+        // ① AAA Skeleton生成
         // ==================================================
 
-        PlayerSkeletonFactory importer = new PlayerSkeletonFactory();
+        try {
 
-        Skeleton skeleton = importer.createPlayerSkeleton();
+            PlayerSkeletonFactory factory =
+                    new PlayerSkeletonFactory();
 
-        LOGGER.info("[AAA Animation Test] Player skeleton created.");
+            skeleton =
+                    factory.createPlayerSkeleton();
+
+        } catch (Exception exception) {
+
+            LOGGER.error(
+                    "[AAA Animation Test] Failed to create player skeleton.",
+                    exception
+            );
+
+            return false;
+        }
+
+
+        if (skeleton == null ||
+                skeleton.getRoot() == null) {
+
+            LOGGER.error(
+                    "[AAA Animation Test] Player skeleton or root bone is null."
+            );
+
+            return false;
+        }
+
+
+        LOGGER.info(
+                "[AAA Animation Test] Player skeleton created."
+        );
 
 
         // ==================================================
         // ② Minecraft PlayerModelとのMapping
         // ==================================================
 
-        MinecraftPlayerBoneProvider provider =
-                new MinecraftPlayerBoneProvider(playerModel);
+        try {
 
-        BoneMapping mapping =
-                provider.createMapping(
-                        skeleton.getRoot()
-                );
+            MinecraftPlayerBoneProvider provider =
+                    new MinecraftPlayerBoneProvider(playerModel);
+
+            mapping =
+                    provider.createMapping(
+                            skeleton.getRoot()
+                    );
+
+        } catch (Exception exception) {
+
+            LOGGER.error(
+                    "[AAA Animation Test] Failed to create Minecraft bone mapping.",
+                    exception
+            );
+
+            return false;
+        }
+
+
+        if (mapping == null) {
+
+            LOGGER.error(
+                    "[AAA Animation Test] Bone mapping is null."
+            );
+
+            return false;
+        }
+
 
         LOGGER.info(
                 "[AAA Animation Test] Bone mapping created."
@@ -83,40 +233,118 @@ public class PlayerAnimationTest {
 
 
         // ==================================================
-        // ③ Test 1
-        // chestを回転させてheadへ伝播するか確認
+        // ③ Minecraft Bone Applier
+        // ==================================================
+
+        applier =
+                new MinecraftBoneApplier();
+
+
+        // ==================================================
+        // ④ Required Bone Check
+        // ==================================================
+
+        if (!checkRequiredBones()) {
+            return false;
+        }
+
+
+        // ==================================================
+        // ⑤ Test Pose Setup
+        // ==================================================
+
+        setupTestPose();
+
+
+        LOGGER.info(
+                "[AAA Animation Test] Test pose initialized."
+        );
+
+        return true;
+    }
+
+
+    // ==================================================
+    // Required Bone Check
+    // ==================================================
+
+    private static boolean checkRequiredBones() {
+
+        String[] requiredBones = {
+                "chest",
+                "head",
+                "upper_arm.L",
+                "lower_arm.L"
+        };
+
+
+        for (String boneName : requiredBones) {
+
+            Bone bone =
+                    skeleton.getBone(boneName);
+
+            if (bone == null) {
+
+                LOGGER.error(
+                        "[AAA Animation Test] Required bone not found: {}",
+                        boneName
+                );
+
+                return false;
+            }
+
+            LOGGER.info(
+                    "[AAA Animation Test] Bone found: {}",
+                    boneName
+            );
+        }
+
+
+        // ----------------------------------------------
+        // Minecraft mapping check
+        // Minecraft側Mappingも確認する。
+        // ----------------------------------------------
+
+        if (!mapping.contains("head")) {
+
+            LOGGER.error(
+                    "[AAA Animation Test] Required Minecraft mapping not found: head"
+            );
+
+            return false;
+        }
+
+
+        LOGGER.info(
+                "[AAA Animation Test] Required bone mappings found."
+        );
+
+        return true;
+    }
+
+
+    // ==================================================
+    // Test Pose
+    // ==================================================
+
+    private static void setupTestPose() {
+
+        // ==================================================
+        // Test 1
+        // chestをY軸45度回転
+        //
+        // chest
+        //   └─ head
+        //
+        // headのWorld Rotationへ伝播することを確認する。
         // ==================================================
 
         Bone chest =
                 skeleton.getBone("chest");
 
-        Bone head =
-                skeleton.getBone("head");
-
-        if (chest == null || head == null) {
-
-            LOGGER.error(
-                    "[AAA Animation Test] Required bones not found."
-            );
-
-            return;
-        }
-
-        LOGGER.info(
-                "[AAA Animation Test] chest and head bones found."
-        );
-
-
-        // Y軸45度のQuaternion
-        float halfAngle =
-                (float) Math.toRadians(45.0f / 2.0f);
-
         Quaternion chestRotation =
-                new Quaternion(
-                        0.0f,
-                        (float) Math.sin(halfAngle),
-                        0.0f,
-                        (float) Math.cos(halfAngle)
+                createRotationAroundY(
+                        CHEST_ROTATION_DEGREES
                 );
 
         chest.getTransform().setRotation(
@@ -128,25 +356,82 @@ public class PlayerAnimationTest {
 
 
         // ==================================================
-        // ④ Skeleton全体のWorld Transformを更新
+        // Test 2
+        // upper_arm.LをX軸90度回転
+        //
+        // upper_arm.L
+        //       └─ lower_arm.L
+        //
+        // lower_arm.Lへ回転が伝播することを確認する。
         // ==================================================
 
-        skeleton.getRoot().updateWorldTransform();
+        Bone upperArmL =
+                skeleton.getBone("upper_arm.L");
+
+        Quaternion upperArmRotation =
+                createRotationAroundX(
+                        UPPER_ARM_ROTATION_DEGREES
+                );
+
+        upperArmL.getTransform().setRotation(
+                upperArmRotation.getX(),
+                upperArmRotation.getY(),
+                upperArmRotation.getZ(),
+                upperArmRotation.getW()
+        );
+    }
+
+
+    // ==================================================
+    // Skeleton Propagation Test
+    // ==================================================
+
+    private static void runSkeletonPropagationTest() {
 
         LOGGER.info(
-                "[AAA Animation Test] World transform updated."
+                "[AAA Animation Test] Running skeleton propagation tests..."
         );
 
 
+        // ----------------------------------------------
+        // World Transform更新
+        // ----------------------------------------------
+
+        skeleton.getRoot().updateWorldTransform();
+
+
         // ==================================================
-        // ⑤ headのWorld Rotationを確認
+        // Test 1: chest -> head
         // ==================================================
+
+        Bone chest =
+                skeleton.getBone("chest");
+
+        Bone head =
+                skeleton.getBone("head");
+
+
+        Quaternion chestWorldRotation =
+                chest
+                        .getTransform()
+                        .getWorldRotation();
 
         Quaternion headWorldRotation =
-                head.getTransform().getWorldRotation();
+                head
+                        .getTransform()
+                        .getWorldRotation();
+
 
         LOGGER.info(
-                "[AAA Animation Test] Head World Rotation: x={}, y={}, z={}, w={}",
+                "[AAA Animation Test] chest World Rotation: x={}, y={}, z={}, w={}",
+                chestWorldRotation.getX(),
+                chestWorldRotation.getY(),
+                chestWorldRotation.getZ(),
+                chestWorldRotation.getW()
+        );
+
+        LOGGER.info(
+                "[AAA Animation Test] head World Rotation: x={}, y={}, z={}, w={}",
                 headWorldRotation.getX(),
                 headWorldRotation.getY(),
                 headWorldRotation.getZ(),
@@ -155,9 +440,7 @@ public class PlayerAnimationTest {
 
 
         // ==================================================
-        // ⑥ Test 2
-        // upper_arm.Lを回転させて
-        // lower_arm.Lへ伝播するか確認
+        // Test 2: upper_arm.L -> lower_arm.L
         // ==================================================
 
         Bone upperArmL =
@@ -166,42 +449,6 @@ public class PlayerAnimationTest {
         Bone lowerArmL =
                 skeleton.getBone("lower_arm.L");
 
-        if (upperArmL == null || lowerArmL == null) {
-
-            LOGGER.error(
-                    "[AAA Animation Test] Arm bones not found."
-            );
-
-            return;
-        }
-
-
-        float armHalfAngle =
-                (float) Math.toRadians(90.0f / 2.0f);
-
-        Quaternion armRotation =
-                new Quaternion(
-                        (float) Math.sin(armHalfAngle),
-                        0.0f,
-                        0.0f,
-                        (float) Math.cos(armHalfAngle)
-                );
-
-        upperArmL.getTransform().setRotation(
-                armRotation.getX(),
-                armRotation.getY(),
-                armRotation.getZ(),
-                armRotation.getW()
-        );
-
-
-        // 再計算
-        skeleton.getRoot().updateWorldTransform();
-
-
-        // ==================================================
-        // ⑦ upper_arm.L / lower_arm.Lを確認
-        // ==================================================
 
         Quaternion upperArmWorldRotation =
                 upperArmL
@@ -212,6 +459,7 @@ public class PlayerAnimationTest {
                 lowerArmL
                         .getTransform()
                         .getWorldRotation();
+
 
         LOGGER.info(
                 "[AAA Animation Test] upper_arm.L World Rotation: x={}, y={}, z={}, w={}",
@@ -228,35 +476,92 @@ public class PlayerAnimationTest {
                 lowerArmWorldRotation.getZ(),
                 lowerArmWorldRotation.getW()
         );
+    }
 
 
-        // ==================================================
-        // ⑧ Minecraft側へheadを適用
-        // ==================================================
+    // ==================================================
+    // Minecraft Application Test
+    // ==================================================
 
-        if (!mapping.contains("head")) {
+    private static void applyMinecraftTest(
+            PlayerModel<?> playerModel
+    ) {
 
-            LOGGER.error(
-                    "[AAA Animation Test] head mapping not found!"
-            );
-
+        if (applier == null) {
             return;
         }
 
-        MinecraftBoneApplier applier =
-                new MinecraftBoneApplier();
+        if (mapping == null) {
+            return;
+        }
 
-        applier.apply(
-                mapping.get("head")
+        if (!mapping.contains("head")) {
+            return;
+        }
+
+
+        try {
+
+            applier.apply(
+                    mapping.get("head")
+            );
+
+        } catch (Exception exception) {
+
+            LOGGER.error(
+                    "[AAA Animation Test] Failed to apply head transform to Minecraft ModelPart.",
+                    exception
+            );
+        }
+    }
+
+
+    // ==================================================
+    // Quaternion Helpers
+    // ==================================================
+
+    /**
+     * Create a rotation around the X axis.
+     *
+     * X軸周りの回転Quaternionを生成する。
+     */
+    private static Quaternion createRotationAroundX(
+            float degrees
+    ) {
+
+        float halfAngle =
+                (float) Math.toRadians(
+                        degrees * 0.5f
+                );
+
+        return new Quaternion(
+                (float) Math.sin(halfAngle),
+                0.0f,
+                0.0f,
+                (float) Math.cos(halfAngle)
         );
-
-        LOGGER.info(
-                "[AAA Animation Test] Head transform applied to Minecraft ModelPart."
-        );
+    }
 
 
-        LOGGER.info(
-                "[AAA Animation Test] Transform test completed."
+    /**
+     * Create a rotation around the Y axis.
+     *
+     * Y軸周りの回転Quaternionを生成する。
+     */
+    private static Quaternion createRotationAroundY(
+            float degrees
+    ) {
+
+        float halfAngle =
+                (float) Math.toRadians(
+                        degrees * 0.5f
+                );
+
+        return new Quaternion(
+                0.0f,
+                (float) Math.sin(halfAngle),
+                0.0f,
+                (float) Math.cos(halfAngle)
         );
     }
 }
