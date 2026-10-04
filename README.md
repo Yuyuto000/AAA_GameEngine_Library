@@ -4,7 +4,7 @@ AAA Gaming Engine Library
 このライブラリは、Minecraftのゲームシステムに最先端ゲームシステム技術を組み込む、AAAMinecraft制作のMODの前提基礎MODです。
 
 # 2.このライブラリで起こること
-このライブラリを導入すると、以下の変更を加えます。
+このライブラリを導入すると、以下の追加・変更を加えます。
 
 | 追加・変更部分            | 説明                                                                                                                                                                          |
 |---------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -15,33 +15,25 @@ AAA Gaming Engine Library
 | 3D Model Loader           | 3Dモデリングソフトで本格的に制作されたものをマイクラゲーム内部に正常に読み込めます。なお、Blenderでのモデリングのみ対応しています。対応拡張子は下記にて説明します。           |
 | Combat/Hitbox             | マイクラの攻撃システムと当たり判定を改造し、本格的なFPS及び無双アクションゲームと相違ない戦闘体験ができるシステムを組み込みます。                                             |
 | Carmera                   | カメラワークシステムを追加します。 カメラの揺れやアクションゲームでよくある技の特別カメラワークなどを指します。                                                               |
+| Physics                   | 物理系統の計算関数及び世界で適応される基礎物理とゲーム物理をマイクラ内に埋め込みます。                                                                                        |
+| Audio                     | 3D反響効果やAFX(サウンドエフェクト)を追加します。環境音も追加されます。                                                                                                       |
+| AI                        | MOBのAIパターンを多数追加し、より生き生きとしたNPCを形成します。                                                                                                              |
+| Network                   | 工業や魔術などで使われるオブジェクトの位置関係にまつわるライブラリを追加します。                                                                                              |
 
 # 3.エラーコードについて
 このMODでは、独自のエラーシステムを搭載して問題の早期改善を目指しています。
 ここではエラーコードの内容をお届けします。お問い合わせの際もしくはAddon開発の際にお役立てください。
 
-| エラーコード       | 意味                      |
-|--------------------|---------------------------|
-| BONE-TRANSFORM-001 | 親Transformがnull         |
-| BONE-TRANSFORM-003 | Positionに不正値          |
-| BONE-TRANSFORM-004 | Scaleにゼロまたは極小成分 |
-| BONE-TRANSFORM-007 | Quaternionの長さがゼロ    |
-
-
-
-| 系統                             | 採用 | 役割                            |
-|----------------------------------|------|---------------------------------|
-| **Asset / Model**                | ◎    | モデル・メッシュ・外部アセット  |
-| **Skeletal Animation**           | ◎    | ボーン・アニメーション再生      |
-| **Animation State Machine**      | ◎    | Idle/Walk/Attack等の状態管理    |
-| **Animation Event**              | ◎    | 攻撃・足音・VFX等を時間軸で発火 |
-| **Timeline / Sequencer**         | ◎    | 複数システムの時間同期          |
-| **Combat / Hitbox**              | ◎    | 戦闘判定                        |
-| **VFX**                          | ◎    | パーティクル・Trail・Beam等     |
-| **Material / Shader**            | ◎    | PBR・特殊材質・独自描画         |
-| **Camera**                       | ◎    | FPS/TPS/Cinematic/Shake         |
-| **Audio**                        | ◎    | 3D音響・環境音・イベント        |
-| **Physics**                      | ◎    | Projectile・物理判定等          |
-| **AI**                           | ○    | Behavior/Utility等              |
-| **Network**                      | ○    | Interpolation/Prediction等      |
-| **LOD / Rendering Optimization** | ○    | 大量オブジェクト・描画負荷対策  |
+| エラーコード       | 意味                             |
+|--------------------|----------------------------------|
+| BONE-TRANSFORM-001 | 親Transformがnull                |
+| BONE-TRANSFORM-003 | Positionに不正値                 |
+| BONE-TRANSFORM-004 | Scaleにゼロまたは極小成分        |
+| BONE-TRANSFORM-007 | Quaternionの長さがゼロ           |
+| SKELETON-003       | 指定Boneが存在しない             |
+| SKELETON-005       | 循環または重複参照               |
+| SKELETON-007       | Bone名が重複                     |
+| SKELETON-LOAD-005  | Json内でBone名が重複             |
+| SKELETON-LOAD-008  | 親Boneが存在しない               |
+| SKELETON-LOAD-015  | Root TransformがIdentityではない |
+| SKELETON-LOAD-028  | JSON数値がNaNまたは無限大        |
