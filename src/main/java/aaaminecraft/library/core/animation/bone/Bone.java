@@ -22,6 +22,7 @@ public class Bone {
     private final List<Bone> children;
 
     private final BoneTransformer transformer;
+    private boolean hierarchyFrozen;
 
     public Bone(String name) {
         if (name == null) {
@@ -83,6 +84,10 @@ public class Bone {
      */
     public void addChild(Bone child) {
 
+        if (hierarchyFrozen) {
+            throw new BoneException("BONE-010", ERROR_PREFIX + " Cannot modify a frozen Skeleton hierarchy. " + "/ 確定済みSkeletonの親子関係は変更できません。");
+        }
+
         if (child == null) {
             throw new BoneException("BONE-003", ERROR_PREFIX + " Cannot add null child. / nullのBoneを子として追加できません。");
         }
@@ -114,6 +119,10 @@ public class Bone {
      * @param child 削除する子Bone
      */
     public void removeChild(Bone child) {
+
+        if (hierarchyFrozen) {
+            throw new BoneException("BONE-010", ERROR_PREFIX + " Cannot modify a frozen Skeleton hierarchy. " + "/ 確定済みSkeletonの親子関係は変更できません。");
+        }
 
         if (child == null) {
             throw new BoneException("BONE-008", ERROR_PREFIX + " Cannot remove null child. / nullのBoneを削除対象にはできません。");
@@ -163,6 +172,14 @@ public class Bone {
         }
 
         return false;
+    }
+
+    void freezeHierarchy() {
+        hierarchyFrozen = true;
+
+        for (Bone child : children) {
+            child.freezeHierarchy();
+        }
     }
 
     @Override
