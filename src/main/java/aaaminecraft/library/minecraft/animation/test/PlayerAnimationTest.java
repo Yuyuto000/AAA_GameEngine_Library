@@ -4,17 +4,15 @@ import com.mojang.logging.LogUtils;
 
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 
 import org.slf4j.Logger;
 
 import aaaminecraft.library.core.animation.bone.Bone;
 import aaaminecraft.library.core.animation.bone.BoneMapping;
 import aaaminecraft.library.core.animation.bone.Skeleton;
-import aaaminecraft.library.core.animation.importer.PlayerAnimationImporter;
+import aaaminecraft.library.core.animation.bone.PlayerSkeletonFactory;
 import aaaminecraft.library.core.transform.Quaternion;
 
 import aaaminecraft.library.minecraft.animation.bone.MinecraftBoneApplier;
@@ -60,7 +58,7 @@ public class PlayerAnimationTest {
         // ① AAA Skeletonを生成
         // ==================================================
 
-        PlayerAnimationImporter importer = new PlayerAnimationImporter();
+        PlayerSkeletonFactory importer = new PlayerSkeletonFactory();
 
         Skeleton skeleton = importer.createPlayerSkeleton();
 

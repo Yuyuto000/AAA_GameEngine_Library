@@ -6,62 +6,91 @@ import aaaminecraft.library.core.transform.Vector3;
 public final class MinecraftTransformConverter {
 
     private static final float MODEL_SCALE = 16.0f;
+    private static final String ERROR_PREFIX = "[AAAMINECRAFT-TRANSFORM_CONVERTER]";
 
     private MinecraftTransformConverter() {
+        throw new AssertionError("MinecraftTransformConverter must not be instantiated./ MinecraftTransformConverter をインスタンス化してはなりません。");
     }
 
     /**
-     * Blender座標をMinecraftのモデル座標へ変換する。
+     * Converts a position from AAA skeleton coordinates
+     * into Minecraft model coordinates.
+     * AAAスケルトン座標系からの位置を、Minecraftモデル座標系に変換します。
      *
-     * Blender:
-     *   +X = 右
-     *   +Y = 前
-     *   +Z = 上
+     * AAA:
+     *   +X = right 左右
+     *   +Y = forward　前後
+     *   +Z = up　上下
      *
-     * Minecraftモデル:
-     *   +X = 右
-     *   +Y = 下
-     *   +Z = 後ろ
+     * Minecraft model:
+     *   +X = right 左右
+     *   +Y = down 上下
+     *   +Z = backward 前後
      *
-     * ※軸の向きは現在の実装仮説。
-     * 実際のモデル表示で検証すること。
+     * NOTE:
+     * The axis convention must be validated against the actual
+     * Minecraft model and exporter pipeline.
+     * 軸の定義は、実際のMinecraftモデルおよびエクスポートパイプラインに対して検証する必要があります。
      */
-    public static Vector3 toMinecraftPosition(Vector3 worldPosition) {
+
+    public static Vector3 toMinecraftPosition(Vector3 aaaPosition) {
+
+        requireVector(aaaPosition, "MINECRAFT-BONE-001", "Position must not be null.", "Positionはnullにできません。");
+
         return new Vector3(
-                worldPosition.getX() * MODEL_SCALE,
-                -worldPosition.getZ() * MODEL_SCALE,
-                -worldPosition.getY() * MODEL_SCALE
+                aaaPosition.getX() * MODEL_SCALE,
+                -aaaPosition.getZ() * MODEL_SCALE,
+                -aaaPosition.getY() * MODEL_SCALE
         );
     }
 
     /**
-     * Blender側の回転をMinecraft側の回転へ変換する。
+     * Converts an AAA rotation quaternion into the current Minecraft adapter rotation convention.
+     * AAAの回転クォータニオンを、Minecraftアダプターの現在の回転規約に変換します。
      *
-     * 座標軸の変換:
-     * (x, y, z) -> (x, -z, -y)
-     *
-     * Quaternionのベクトル部分は、
-     * この座標変換に対して (-x, z, y) となる。
+     * IMPORTANT:
+     * This conversion is part of the current coordinate-system hypothesis and must be validated by axis tests.
+     * この変換は、現在の座標系仮説の一部であり、軸テストによって検証されなければなりません。
      */
-    public static Quaternion toMinecraftRotation(
-            Quaternion worldRotation
-    ) {
-        return new Quaternion(
-                -worldRotation.getX(),
-                worldRotation.getZ(),
-                worldRotation.getY(),
-                worldRotation.getW()
-        ).normalize();
+    public static Quaternion toMinecraftRotation(Quaternion aaaRotation) {
+
+        if (aaaRotation == null) {
+            throw new MinecraftBoneException("MINECRAFT-BONE-002", "Rotation must not be null. / " + "Rotationはnullにできません。");
+        }
+
+        Quaternion result = new Quaternion(
+                -aaaRotation.getX(),
+                aaaRotation.getZ(),
+                aaaRotation.getY(),
+                aaaRotation.getW()
+        );
+
+        try {
+            return result.normalize();
+        } catch (RuntimeException e) {
+            throw new MinecraftBoneException("MINECRAFT-BONE-003", "Failed to normalize converted rotation. / " + "変換後の回転Quaternionを正規化できませんでした。", e);
+        }
     }
 
     /**
-     * Blender側のスケールをMinecraft側へ変換する。
+     * Converts AAA scale into Minecraft model-axis order.
+     * AAAスケールをMinecraftのモデル軸順に変換します。
      */
-    public static Vector3 toMinecraftScale(Vector3 worldScale) {
+    public static Vector3 toMinecraftScale(Vector3 aaaScale) {
+
+        requireVector(aaaScale, "MINECRAFT-BONE-004", "Scale must not be null.", "Scaleはnullにできません。");
+
         return new Vector3(
-                worldScale.getX(),
-                worldScale.getZ(),
-                worldScale.getY()
+                aaaScale.getX(),
+                aaaScale.getZ(),
+                aaaScale.getY()
         );
+    }
+
+    private static void requireVector(Vector3 vector, String errorCode, String englishMessage, String japaneseMessage) {
+
+        if (vector == null) {
+            throw new MinecraftBoneException(errorCode, ERROR_PREFIX + englishMessage + " / " + japaneseMessage);
+        }
     }
 }
